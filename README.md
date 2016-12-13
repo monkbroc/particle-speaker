@@ -13,7 +13,7 @@ uint16_t bufferSize = 128;
 Speaker speaker(bufferSize);
 
 void setup() {
-  uint16_t audioFrequency = 11025; // Hz
+  uint16_t audioFrequency = 22050; // Hz
   speaker.begin(audioFrequency);
 }
 
@@ -22,9 +22,10 @@ uint16_t audioSignal = 0;
 void loop() {
   if (speaker.ready()) {
     uint16_t *buffer = speaker.getBuffer();
+    // Produces a 1 kHz sawtooth wave
     for (uint16_t i = 0; i < bufferSize; i++) {
       buffer[i] = audioSignal;
-      audioSignal += 100;
+      audioSignal += 2267;
       if (audioSignal > 50000) {
         audioSignal = 0;
       }
@@ -32,6 +33,9 @@ void loop() {
   }
 }
 ```
+
+![1 kHz sawtooth signal](docs/speaker 1kHz sawtooth signal.png)<br>
+A 1 kHz sawtooth signal played from a Photon
 
 See [complete example](examples/sawtooth/sawtooth.ino) in the examples directory.
 
