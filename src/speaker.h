@@ -28,8 +28,10 @@ public:
 private:
     void setupHW(uint16_t audioFrequency);
     uint16_t timerAutoReloadValue(uint16_t audioFrequency);
+    uint8_t currentBuffer();
 
     uint16_t bufferSize;
+    uint8_t lastBuffer;
     uint16_t audioFrequency;
 
     /* Double buffers for audio data */

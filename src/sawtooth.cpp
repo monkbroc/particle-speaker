@@ -1,5 +1,7 @@
 #include "speaker.h"
 
+SYSTEM_MODE(MANUAL);
+
 uint16_t bufferSize = 128;
 Speaker speaker(bufferSize);
 
