@@ -3,17 +3,20 @@
 #include "speaker.h"
 
 #include "stm32f2xx.h"
+#include <algorithm>
 
+// The DAC symbol from the STM32 standard library is shadowed by the DAC Particle pin name
 #define _DAC                 ((DAC_TypeDef *) DAC_BASE)
 
-// Constructor
 Speaker::Speaker(uint16_t bufferSize)
     : bufferSize(bufferSize),
     lastBuffer(0xFF),
     audioFrequency(8000)
 {
     buffer0 = new uint16_t[bufferSize];
+    std::fill(buffer0, &buffer0[bufferSize], 0);
     buffer1 = new uint16_t[bufferSize];
+    std::fill(buffer1, &buffer1[bufferSize], 0);
 }
 
 Speaker::~Speaker()
@@ -35,6 +38,31 @@ void Speaker::setupHW(uint16_t audioFrequency)
     /* DMA clock enable */
     RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_DMA1, ENABLE);
 
+    /* DMA1 Stream5 channel7 configuration */
+    DMA_DeInit(DMA1_Stream5);
+
+    DMA_InitTypeDef DMA_InitStructure;
+    DMA_StructInit(&DMA_InitStructure);
+    DMA_InitStructure.DMA_BufferSize = bufferSize;
+    DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t) &_DAC->DHR12L1;
+    DMA_InitStructure.DMA_Memory0BaseAddr = (uint32_t) buffer0;
+    DMA_InitStructure.DMA_DIR = DMA_DIR_MemoryToPeripheral;
+    DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
+    DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
+    DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_HalfWord;
+    DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_HalfWord;
+    DMA_InitStructure.DMA_Mode = DMA_Mode_Circular;
+    DMA_InitStructure.DMA_Priority = DMA_Priority_High;
+    DMA_InitStructure.DMA_Channel = DMA_Channel_7; // Stream5 Channel7 = DAC1
+    DMA_Init(DMA1_Stream5, &DMA_InitStructure);
+
+    /* Configure DMA1 Stream5 double buffering */
+    DMA_DoubleBufferModeConfig(DMA1_Stream5, (uint32_t) buffer1, DMA_Memory_1);
+    DMA_DoubleBufferModeCmd(DMA1_Stream5, ENABLE);
+
+    /* Enable DMA1 Stream5 */
+    DMA_Cmd(DMA1_Stream5, ENABLE);
+
     /* DAC channel1 Configuration */
     DAC_DeInit();
 
@@ -49,31 +77,6 @@ void Speaker::setupHW(uint16_t audioFrequency)
 
     /* Enable DAC Channel1 */
     DAC_Cmd(DAC_Channel_1, ENABLE);
-
-    /* DMA1 Stream5 channel7 configuration */
-    DMA_InitTypeDef DMA_InitStructure;
-
-    /* Deinitialize DMA Streams */
-    DMA_DeInit(DMA1_Stream5);
-    DMA_InitStructure.DMA_BufferSize = bufferSize;
-    DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t) &_DAC->DHR12L1;
-    DMA_InitStructure.DMA_Memory0BaseAddr = (uint32_t) buffer0;
-    DMA_InitStructure.DMA_DIR = DMA_DIR_MemoryToPeripheral;
-    DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
-    DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
-    DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_HalfWord;
-    DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_HalfWord;
-    DMA_InitStructure.DMA_Mode = DMA_Mode_Circular;
-    DMA_InitStructure.DMA_Priority = DMA_Priority_High;
-    DMA_InitStructure.DMA_Channel = DMA_Channel_7;
-    DMA_Init(DMA1_Stream5, &DMA_InitStructure);
-
-    /* Configure DMA1 Stream5 double buffering */
-    DMA_DoubleBufferModeConfig(DMA1_Stream5, (uint32_t) buffer1, DMA_Memory_0);
-    DMA_DoubleBufferModeCmd(DMA1_Stream5, ENABLE);
-
-    /* Enable DMA1 Stream5 */
-    DMA_Cmd(DMA1_Stream5, ENABLE);
 
     /* Enable DMA for DAC Channel1 */
     DAC_DMACmd(DAC_Channel_1, ENABLE);
@@ -127,5 +130,5 @@ bool Speaker::ready()
 uint16_t *Speaker::getBuffer()
 {
     /* Return alternate buffer for DMA1 Stream5 double buffering */
-    return currentBuffer() == 0 ? buffer1 : buffer0;
+    return currentBuffer() ? buffer0 : buffer1;
 }

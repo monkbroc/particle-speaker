@@ -24,8 +24,8 @@ void loop() {
     uint16_t *buffer = speaker.getBuffer();
     for (uint16_t i = 0; i < bufferSize; i++) {
       buffer[i] = audioSignal;
-      audioSignal++;
-      if (audioSignal > 1023) {
+      audioSignal += 100;
+      if (audioSignal > 50000) {
         audioSignal = 0;
       }
     }
@@ -47,6 +47,10 @@ While the library plays the sound in one buffer your application fills the secon
 
 The larger the buffer, the more delay there will be in between your application filling a buffer and it being played. The shorter the buffer, the less time your code has to fill the next buffer. Short buffers work best for real-time audio synthesis and longer buffer for playback from an SD card.
 
+The application has `bufferSize / audioFrequency` seconds to fill the next buffer. For example, this is 2.9 ms at 44100 Hz with a 128 sample buffer.
+
+The copy from memory to the DAC is done using direct memory access (DMA) so the CPU is free to do other tasks.
+
 ### `begin`
 
 `speaker.begin(audioFrequency);`
@@ -55,7 +59,7 @@ Sets up the `DAC` pin and `TIM6` timer to trigger at the correct audio freqency.
 
 Starts playing the content of the buffer immediately so you may want to fill the audio buffer before calling `speaker.begin`. The buffer is zero by default so not filling the buffer first would still be OK.
 
-_Note: Do not call `analogWrite(DAC, ...);` when using this library since it completely takes over the DAC peripheral.`
+_Note: Do not call `analogWrite(DAC, ...);` when using this library since it completely takes over the DAC peripheral.`_
 
 ### `end`
 
@@ -67,7 +71,7 @@ Stops the audio playback.
 
 `bool readyForMoreAudio = speaker.ready();`
 
-Returns `true` if the library has a buffer ready to be filled with audio samples.
+Returns `true` once when the audio buffer is ready to be filled with more audio samples.  Will return `false` when called again until the buffer has finished playing.
 
 ### `getBuffer`
 
@@ -75,12 +79,15 @@ Returns `true` if the library has a buffer ready to be filled with audio samples
 
 Returns a pointer to an array of `bufferSize` audio samples.
 
+The audio samples are 16 bit integers but the DAC on the Photon and Electron only has 12 bits to the least significant 4 bits are ignored.
+
 You must only write to this array when `speaker.ready()` is `true`.
 
 ## Resources
 
-This library uses the `DAC1` digital to analog converter, `TIM6` basic timer and the `DMA1` direct memory access channel.
+This library uses the `DAC1` digital to analog converter, `TIM6` basic timer and `DMA1` stream 5 direct memory access.
 
 ## License
 Copyright 2016 Julien Vanier
+
 Released under the MIT license
