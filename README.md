@@ -87,9 +87,13 @@ The audio samples are 16 bit integers but the DAC on the Photon and Electron onl
 
 You must only write to this array when `speaker.ready()` is `true`.
 
-## Resources
+## Resource Utilization
 
 This library uses the `DAC1` digital to analog converter, `TIM6` basic timer and `DMA1` stream 5 direct memory access.
+
+## References
+
+Read the [STM Application note AN3126 - Audio and waveform generation using the DAC in STM32 microcontrollers](http://www.st.com/content/ccc/resource/technical/document/application_note/05/fb/41/91/39/02/4d/1e/CD00259245.pdf/files/CD00259245.pdf/jcr:content/translations/en.CD00259245.pdf) for more background on using the DAC and DMA for audio generation.
 
 ## License
 Copyright 2016 Julien Vanier
