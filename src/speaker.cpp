@@ -71,7 +71,7 @@ void Speaker::setupHW(uint16_t audioFrequency)
     
     DAC_InitStructure.DAC_Trigger = DAC_Trigger_T6_TRGO;
     DAC_InitStructure.DAC_WaveGeneration = DAC_WaveGeneration_None;
-    DAC_InitStructure.DAC_OutputBuffer = DAC_OutputBuffer_Disable;
+    DAC_InitStructure.DAC_OutputBuffer = DAC_OutputBuffer_Enable;
 
     DAC_Init(DAC_Channel_1, &DAC_InitStructure);
 
@@ -97,7 +97,7 @@ void Speaker::setupHW(uint16_t audioFrequency)
 
 uint16_t Speaker::timerAutoReloadValue(uint16_t audioFrequency)
 {
-    return SystemCoreClock / audioFrequency;
+    return SystemCoreClock / 2 / audioFrequency;
 }
 
 void Speaker::end()
