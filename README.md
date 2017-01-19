@@ -41,7 +41,7 @@ See [complete example](examples/sawtooth/sawtooth.ino) in the examples directory
 
 Currently the output is mono. Since the Photon and Electron have 2 DAC outputs, the library could be extended to support stereo output.
 
-## Reference
+## Documentation
 
 ### `Speaker`
 
