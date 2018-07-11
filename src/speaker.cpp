@@ -1,4 +1,8 @@
 // Speaker library by Julien Vanier <jvanier@gmail.com>
+//   Adaptions by ScruffR
+//     - make double buffering optinal
+//     - option to provide "external" buffer(s) to the library
+//       which allows to play PCM data stored in flash without copying 
 
 #include "speaker.h"
 
@@ -8,21 +12,43 @@
 // The DAC symbol from the STM32 standard library is shadowed by the DAC Particle pin name
 #define _DAC                 ((DAC_TypeDef *) DAC_BASE)
 
-Speaker::Speaker(uint16_t bufferSize)
+Speaker::Speaker(uint16_t bufferSize, bool dblBuffer)
     : bufferSize(bufferSize),
     lastBuffer(0xFF),
-    audioFrequency(8000)
+    audioFrequency(8000),
+    privateBuffer(true)
 {
-    buffer0 = new uint16_t[bufferSize];
-    std::fill(buffer0, &buffer0[bufferSize], 0);
-    buffer1 = new uint16_t[bufferSize];
-    std::fill(buffer1, &buffer1[bufferSize], 0);
+    numBuffers = dblBuffer ? 2 : 1;
+    for (int i = 0; i < numBuffers; i++) {
+        buffer[i] = new uint16_t[bufferSize];
+        std::fill(buffer[i], &buffer[i][bufferSize], 0);
+    }
+    if (!dblBuffer)
+      buffer[1] = buffer[0];
+}
+
+Speaker::Speaker(uint16_t *buffer, uint16_t bufferSize) 
+    : Speaker(buffer, buffer, bufferSize)
+{ }
+
+Speaker::Speaker(uint16_t *buffer0, uint16_t *buffer1, uint16_t bufferSize)
+    : bufferSize(bufferSize) ,
+    lastBuffer(0xFF),
+    audioFrequency(8000),
+    privateBuffer(false)
+{
+    numBuffers = (buffer0 == buffer1) ? 1 : 2;
+    buffer[0] = buffer0;
+    buffer[1] = buffer1;
 }
 
 Speaker::~Speaker()
 {
-    delete[] buffer0;
-    delete[] buffer1;
+    if (privateBuffer) {
+        for (int i = 0; i < numBuffers; i++) {
+            delete buffer[i];
+        }
+    }
 }
 
 void Speaker::begin(uint16_t audioFrequency)
@@ -45,7 +71,7 @@ void Speaker::setupHW(uint16_t audioFrequency)
     DMA_StructInit(&DMA_InitStructure);
     DMA_InitStructure.DMA_BufferSize = bufferSize;
     DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t) &_DAC->DHR12L1;
-    DMA_InitStructure.DMA_Memory0BaseAddr = (uint32_t) buffer0;
+    DMA_InitStructure.DMA_Memory0BaseAddr = (uint32_t)buffer[0];
     DMA_InitStructure.DMA_DIR = DMA_DIR_MemoryToPeripheral;
     DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
     DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
@@ -57,7 +83,7 @@ void Speaker::setupHW(uint16_t audioFrequency)
     DMA_Init(DMA1_Stream5, &DMA_InitStructure);
 
     /* Configure DMA1 Stream5 double buffering */
-    DMA_DoubleBufferModeConfig(DMA1_Stream5, (uint32_t) buffer1, DMA_Memory_1);
+    DMA_DoubleBufferModeConfig(DMA1_Stream5, (uint32_t) buffer[1], DMA_Memory_1);
     DMA_DoubleBufferModeCmd(DMA1_Stream5, ENABLE);
 
     /* Enable DMA1 Stream5 */
@@ -130,5 +156,5 @@ bool Speaker::ready()
 uint16_t *Speaker::getBuffer()
 {
     /* Return alternate buffer for DMA1 Stream5 double buffering */
-    return currentBuffer() ? buffer0 : buffer1;
+    return currentBuffer() ? buffer[0] : buffer[1];
 }

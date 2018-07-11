@@ -1,0 +1,80 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<title>File converter</title>  
+</head>
+<body>
+
+<div id="main">
+
+	<h1>Raw Signed Int16 PCM to uint16_t array converter</h1>
+	  <form name="frmConvert" action="">
+		<p>
+		File: 
+		<input type="file" name="fileinput" onchange='openFile(event)' /> 
+		</p>        
+      <p>Options:</p>
+        <p>
+        Prefix data with variable definition <input id="prefix" value="const uint16_t sound[] = ">		  
+        <br>
+        Samples prefix <input id="samplePrefix"  type="text" value="0x" maxlength="10" >
+        <br>
+        Samples suffix <input id="sampleSuffix" type="text" value=", " maxlength="10" >
+        <br>
+        Insert newlines after every <input id="newline" type="number" value="10" min="0" max="100" style="width: 50px" > samples		  
+        </p>
+			  <p>
+			    <button type=button name="btnConvert"
+            onclick="Convert()">
+            Convert
+          </button>
+			  </p>		  
+			</form>
+      <p>Output:</p>
+        <p>
+      <textarea id="ed_output" rows="25" style="width: 100%"></textarea>				
+      </p>			    
+  </div>
+<script type="text/javascript">   
+  var samples;
+	
+  function Convert() {	
+    var hexText = document.frmConvert.prefix.value;
+    var sPrefix = document.frmConvert.samplePrefix.value;
+    var sSuffix = document.frmConvert.sampleSuffix.value;
+    var newline = document.frmConvert.newline.value;
+    
+    hexText += "\r\n{\r\n"
+    for (i=0; i<samples.length; i++) {
+      var sample = samples[i];
+      sample += 32768;  // map int16_t -32768 .. +32767 to uint16 0 .. 65535
+      hexText += sPrefix + ("000"+sample.toString(16)).slice(-4) + sSuffix;
+      if (newline) {
+        if ((i % newline) == newline-1) {
+          hexText += "\r\n";
+        }
+      }
+    }
+    hexText += "\r\n};"
+    document.getElementById("ed_output").value = hexText;		  	
+  }
+
+  function readFileAsArray(file) {
+    var reader = new FileReader();
+    reader.onload = function(){
+      var arr = reader.result;
+      samples = new Uint16Array(arr);	  
+    };
+    reader.readAsArrayBuffer(file);    
+  }    
+
+  var openFile = function(event) {
+    var input = event.target;
+    readFileAsArray(input.files[0]);
+  };   
+</script>
+
+</body>
+</html>
+
