@@ -1,0 +1,9 @@
+language: node_js
+node_js:
+  - 10
+install:
+  - npm install -g particle-cli
+  - particle --no-update-check login --token $PARTICLE_TOKEN
+script:
+  - ./compile_examples.sh
+
