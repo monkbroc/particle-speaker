@@ -34,7 +34,7 @@ void loop() {
 }
 ```
 
-![1 kHz sawtooth signal](docs/speaker 1kHz sawtooth signal.png)<br>
+![1 kHz sawtooth signal](docs/speaker%201kHz%20sawtooth%20signal.png)<br>
 A 1 kHz sawtooth signal played from a Photon
 
 See [complete example](examples/sawtooth/sawtooth.ino) in the examples directory.
