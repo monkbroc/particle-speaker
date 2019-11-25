@@ -1,3 +1,6 @@
+// This #include statement was automatically added by the Particle IDE.
+#include <SdFat.h>
+
 // Generate audio with your Photon or Electron
 //
 // Speaker library by Julien Vanier <jvanier@gmail.com>
@@ -22,8 +25,9 @@ SerialLogHandler logHandler(LOG_LEVEL_NONE, {   // Logging level for non-app mes
 });
 
 // WAV header spec information:
-//https://web.archive.org/web/20140327141505/https://ccrma.stanford.edu/courses/422/projects/WaveFormat/
-//http://www.topherlee.com/software/pcm-tut-wavformat.html
+// https://web.archive.org/web/20140327141505/
+// https://ccrma.stanford.edu/courses/422/projects/WaveFormat/
+// http://www.topherlee.com/software/pcm-tut-wavformat.html
 typedef struct wav_header {
   // RIFF Header
   char     riff_header[4];   // Contains "RIFF"
@@ -83,7 +87,7 @@ int selectFile(const char* filename) {
   
   wavFile = sd.open(filename);
   if (wavFile) {
-    memset((uint8_t*)data, 0x80, sizeof(data)); // reset buffer to bias value 0x8080 (qucker via memse() than writing 0x8000)
+    memset((uint8_t*)data, 0x80, sizeof(data)); // reset buffer to bias value 0x8080 (quicker via memset() than writing 0x8000 in a loop)
     if (sizeof(wh) == wavFile.read((uint8_t*)&wh, sizeof(wh))) {
       Log.printf("%s\n\r\t%.4s\r\n\tsize: %lu\r\n\t%.4s\r\n\t%.4s\r\n\tchunk size (16?): %lu\r\n\taudio format (1?): %u\r\n\tchannels: %u"
                 , filename
@@ -126,7 +130,7 @@ int readChunk() {
     
     memset((uint8_t*)wav, 0x80, BUFFERSIZE);            // reset buffer to bias value 0x8080
     for(int b = 0; b < n; b += wh.sample_alignment) {
-      wav[retVal++] = *(uint16_t*)&buf[b] + 32768;
+      wav[retVal++] = *(uint16_t*)&buf[b] + 32768;      // convert int16_t to uin16_t with bias 0x8000
     }
   }
   else
