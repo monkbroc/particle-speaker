@@ -1,4 +1,5 @@
 # Speaker
+[![Build Status](https://travis-ci.org/monkbroc/particle-speaker.svg?branch=master)](https://travis-ci.org/monkbroc/particle-speaker)
 
 Generate audio output for a speaker for Particle devices (Photon, Electron)
 
