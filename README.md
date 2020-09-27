@@ -5,7 +5,11 @@ Generate audio output for a speaker for Particle devices (Photon, Electron)
 
 ## Usage
 
-Connect a speaker amplifier like [this one from Adafruit](https://www.adafruit.com/product/2130) to the digital to analog converter `DAC` pin of a Photon or Electron and run this code to play a sawtooth wave.
+Connect a speaker amplifier like
+[this one from Adafruit](https://www.adafruit.com/product/2130) to the
+digital to analog converter `DAC` pin of a Photon or Electron and run
+this code to play a sawtooth wave.  Optional stereo playback is
+available via a second `DAC`, pin A3 on the Photon or Electron.
 
 ```
 #include "speaker.h"
@@ -40,7 +44,7 @@ A 1 kHz sawtooth signal played from a Photon
 
 See [complete example](examples/sawtooth/sawtooth.ino) in the examples directory.
 
-Currently the output is mono. Since the Photon and Electron have 2 DAC outputs, the library could be extended to support stereo output.
+See [another example](examples/tones/tones.ino) for stereo operation.
 
 ## Documentation
 
@@ -56,13 +60,13 @@ The larger the buffer, the more delay there will be in between your application 
 
 The application has `bufferSize / audioFrequency` seconds to fill the next buffer. For example, this is 2.9 ms at 44100 Hz with a 128 sample buffer.
 
-The copy from memory to the DAC is done using direct memory access (DMA) so the CPU is free to do other tasks.
+The copy from memory to the DAC(s) is done using direct memory access (DMA) so the CPU is free to do other tasks.
 
 ### `begin`
 
 `speaker.begin(audioFrequency);`
 
-Sets up the `DAC` pin and `TIM6` timer to trigger at the correct audio freqency. Common frequencies are 44100 Hz, 22050 Hz, 11025 Hz and 8000 Hz.
+Sets up the `DAC` pin(s) and `TIM6` timer to trigger at the correct audio freqency. Common frequencies are 44100 Hz, 22050 Hz, 11025 Hz and 8000 Hz.
 
 Starts playing the content of the buffer immediately so you may want to fill the audio buffer before calling `speaker.begin`. The buffer is zero by default so not filling the buffer first would still be OK.
 
@@ -90,9 +94,21 @@ The audio samples are 16 bit integers but the DAC on the Photon and Electron onl
 
 You must only write to this array when `speaker.ready()` is `true`.
 
+### `getStereoBuffer`
+
+`uint32_t *buffer = speaker.getStereoBuffer();`
+
+Returns a pointer to an array of `bufferSize` stereo audio
+samples, packed with the upper 16-bits for DAC2 and the lower
+16-bits for DAC1.   The lower 4 bits of each channel are ignored.
+
+You must only write to this array when `speaker.ready()` is `true`.
+
 ## Resource Utilization
 
-This library uses the `DAC1` digital to analog converter, `TIM6` basic timer and `DMA1` stream 5 direct memory access.
+This library uses the `DAC1` digital to analog converter, `TIM6` basic
+timer and `DMA1` stream 5 direct memory access.  For stereo operation
+`DAC2` is also used.
 
 ## References
 
