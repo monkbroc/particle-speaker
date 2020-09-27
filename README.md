@@ -108,7 +108,7 @@ You must only write to this array when `speaker.ready()` is `true`.
 
 This library uses the `DAC1` digital to analog converter, `TIM6` basic
 timer and `DMA1` stream 5 direct memory access.  For stereo operation
-`DAC2` is als used.
+`DAC2` is also used.
 
 ## References
 
