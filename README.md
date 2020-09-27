@@ -94,6 +94,16 @@ The audio samples are 16 bit integers but the DAC on the Photon and Electron onl
 
 You must only write to this array when `speaker.ready()` is `true`.
 
+### `getStereoBuffer`
+
+`uint32_t *buffer = speaker.getStereoBuffer();`
+
+Returns a pointer to an array of `bufferSize` stereo audio
+samples, packed with the upper 16-bits for DAC2 and the lower
+16-bits for DAC1.   The lower 4 bits of each channel are ignored.
+
+You must only write to this array when `speaker.ready()` is `true`.
+
 ## Resource Utilization
 
 This library uses the `DAC1` digital to analog converter, `TIM6` basic
